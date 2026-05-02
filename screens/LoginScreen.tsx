@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Image, ScrollView, SafeAreaView } from 'react-native';
+import {
+    StyleSheet,
+    View,
+    KeyboardAvoidingView,
+    Platform,
+    TouchableWithoutFeedback,
+    Keyboard,
+    ScrollView
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Heading from '../components/Heading';
 import MyText from '../components/MyText';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
 import TextLink from '../components/TextLink';
+import Illustration from '../assets/illustrations/01.svg';
 import { COLORS } from '../constants/theme';
 
 export default function LoginScreen() {
@@ -14,40 +24,47 @@ export default function LoginScreen() {
 
     return (
         <SafeAreaView style={styles.mainContainer}>
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-
-                <View style={styles.container}>
-                    <Heading text="Witamy ponownie!" />
-
-                    <View style={styles.form}>
-                        <MyText text="Twoje dane" />
-                        <InputField
-                            placeholder="Adres e-mail"
-                            type="email"
-                            icon="at"
-                            onChange={(val) => setEmail(val)}
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.keyboardView}
+            >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
+                        <Illustration
+                            width={360}
+                            height={240}
+                            style={styles.illustration}
                         />
-                        <InputField
-                            placeholder="Hasło"
-                            type="password"
-                            icon="lock"
-                            onChange={(val) => setPassword(val)}
-                        />
-                        <Button text="Zaloguj się" />
 
-                        {error && (
-                            <View style={styles.errorContainer}>
-                                <MyText text={error} />
+                        <View style={styles.container}>
+                            <Heading text="Witamy ponownie!" />
+
+                            <View style={styles.form}>
+                                <MyText text="Twoje dane" />
+                                <InputField
+                                    placeholder="Adres e-mail"
+                                    type="email"
+                                    icon="at"
+                                    onChange={(val) => setEmail(val)}
+                                />
+                                <InputField
+                                    placeholder="Hasło"
+                                    type="password"
+                                    icon="lock"
+                                    onChange={(val) => setPassword(val)}
+                                />
+                                <Button text="Zaloguj się" variant="primary" />
+                                {error ? <MyText text={error} style={styles.errorMsg} /> : null}
                             </View>
-                        )}
-                    </View>
 
-                    <View style={styles.question}>
-                        <MyText text="Nie posiadasz jeszcze konta?" />
-                        <TextLink href="/register" text="Zarejestruj się" />
-                    </View>
-                </View>
-            </ScrollView>
+                            <View style={styles.question}>
+                                <MyText text="Nie posiadasz jeszcze konta?" />
+                                <TextLink href="/register" text="Zarejestruj się" />
+                            </View>
+                        </View>
+                    </ScrollView>
+                </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
@@ -57,16 +74,20 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: COLORS.white,
     },
-    scrollContainer: {
-        paddingTop: 80,
+    keyboardView: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        paddingTop: 0,
         paddingBottom: 50,
         paddingLeft: 40,
-        gap: 40,
+        gap: 20,
     },
     illustration: {
-        width: 200,
-        height: 200,
-        alignSelf: 'flex-start',
+        alignSelf: 'flex-end',
+        marginRight: -60,
+        marginTop: -20,
     },
     container: {
         paddingRight: 40,
@@ -75,10 +96,11 @@ const styles = StyleSheet.create({
     form: {
         gap: 15,
     },
-    errorContainer: {
-        marginTop: 5,
-    },
     question: {
-        gap: 5,
+        gap: 0,
     },
+    errorMsg: {
+        color: 'red',
+        fontSize: 14,
+    }
 });
