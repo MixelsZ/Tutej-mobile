@@ -6,9 +6,13 @@ import {
     Platform,
     TouchableWithoutFeedback,
     Keyboard,
-    ScrollView
+    ScrollView,
+    Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as SecureStore from 'expo-secure-store';
+import { useRouter } from 'expo-router';
+
 import Heading from '../components/Heading';
 import MyText from '../components/MyText';
 import InputField from '../components/InputField';
@@ -21,6 +25,43 @@ export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
+
+    const handleLogin = async () => {
+        if (!email || !password) {
+            setError('Wszystkie pola są wymagane.');
+            return;
+        }
+
+        setError(null);
+
+        try {
+
+            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+            console.log("ODPOWIEDŹ SERWERA:", data);
+
+            if (response.ok) {
+                // Sprawdź czy SecureStore nie rzuca błędu w przeglądarce
+                try {
+                    await SecureStore.setItemAsync('token', data.token);
+                    await SecureStore.setItemAsync('userName', data.user.firstName);
+                } catch (e) {
+                    console.log("SecureStore nie działa w przeglądarce, ale idziemy dalej");
+                }
+
+
+                router.replace('/(tabs)/');
+            }
+        } catch (e) {
+            Alert.alert('Błąd połączenia', 'Nie można połączyć się z serwerem. Sprawdź IP i czy serwer działa.');
+        }
+    };
 
     return (
         <SafeAreaView style={styles.mainContainer}>
@@ -30,11 +71,7 @@ export default function LoginScreen() {
             >
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
-                        <Illustration
-                            width={360}
-                            height={240}
-                            style={styles.illustration}
-                        />
+                        <Illustration width={360} height={240} style={styles.illustration} />
 
                         <View style={styles.container}>
                             <Heading text="Witamy ponownie!" />
@@ -53,7 +90,11 @@ export default function LoginScreen() {
                                     icon="lock"
                                     onChange={(val) => setPassword(val)}
                                 />
-                                <Button text="Zaloguj się" variant="primary" />
+                                <Button
+                                    text="Zaloguj się"
+                                    variant="primary"
+                                    onClick={handleLogin}
+                                />
                                 {error ? <MyText text={error} style={styles.errorMsg} /> : null}
                             </View>
 
